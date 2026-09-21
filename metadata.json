@@ -1,0 +1,8 @@
+{
+  "name": "EXTREME FINAL",
+  "description": "3D cadastral platform extending India\u0027s 2D land-record systems into vertical, floor-and-unit-level property ownership with AI-assisted 3D ULPIN generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

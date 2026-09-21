@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: 248 250 252;       /* #F8FAFC */
+  --bg-surface: 255 255 255;   /* #FFFFFF */
+  --bg-subtle: 241 245 249;    /* #F1F5F9 */
+  --border-color: 229 231 235; /* #E5E7EB */
+  --text-main: 17 24 39;       /* #111827 */
+  --text-muted: 71 85 105;     /* #475569 */
+  --color-primary: 29 78 216;  /* #1D4ED8 */
+  --color-accent: 20 184 166;  /* #14B8A6 */
+  --color-success: 16 185 129; /* #10B981 */
+  --color-warning: 245 158 11; /* #F59E0B */
+  --color-danger: 239 68 68;   /* #EF4444 */
+  --color-info: 14 165 233;    /* #0EA5E9 */
+}
+
+[data-theme="dark"],
+.dark {
+  --bg-base: 11 18 32;         /* #0B1220 */
+  --bg-surface: 17 24 39;      /* #111827 */
+  --bg-subtle: 23 32 51;       /* #172033 */
+  --border-color: 31 41 55;    /* #1F2937 */
+  --text-main: 248 250 252;    /* #F8FAFC */
+  --text-muted: 148 163 184;   /* #94A3B8 */
+  --color-primary: 37 99 235;  /* #2563EB */
+  --color-accent: 20 184 166;  /* #14B8A6 */
+  --color-success: 16 185 129; /* #10B981 */
+  --color-warning: 245 158 11; /* #F59E0B */
+  --color-danger: 239 68 68;   /* #EF4444 */
+  --color-info: 14 165 233;    /* #0EA5E9 */
+}
+
+/* Custom theme helpers */
+.bg-theme-base { background-color: rgb(var(--bg-base)); }
+.bg-theme-surface { background-color: rgb(var(--bg-surface)); }
+.bg-theme-subtle { background-color: rgb(var(--bg-subtle)); }
+.border-theme { border-color: rgb(var(--border-color)); }
+.text-theme-main { color: rgb(var(--text-main)); }
+.text-theme-muted { color: rgb(var(--text-muted)); }
+.bg-theme-primary { background-color: rgb(var(--color-primary)); }
+.text-theme-primary { color: rgb(var(--color-primary)); }
+.border-theme-primary { border-color: rgb(var(--color-primary)); }
+.text-theme-accent { color: rgb(var(--color-accent)); }
+.bg-theme-accent { background-color: rgb(var(--color-accent)); }
+
+/* Glassmorphism over globe */
+.globe-overlay-panel {
+  background-color: rgba(var(--bg-surface), 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(var(--border-color), 0.7);
+}
+
+/* Tabular nums for IDs, areas, coordinates */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* Cesium container styles */
+.cesium-viewer-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.cesium-viewer {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.cesium-viewer-bottom {
+  display: none !important;
+}

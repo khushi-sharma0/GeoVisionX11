@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" data-theme="dark" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoVision - 3D Cadastral & Vertical Property Platform</title>
+    <meta name="description" content="3D cadastral platform extending India's 2D land-record systems into vertical, floor-and-unit-level property ownership with AI-assisted 3D ULPIN generation." />
+    <meta property="og:title" content="GeoVision - 3D Cadastral & Vertical Property Platform" />
+    <meta property="og:description" content="3D cadastral platform extending India's 2D land-record systems into vertical, floor-and-unit-level property ownership with AI-assisted 3D ULPIN generation." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('geovision.theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-[rgb(var(--bg-base))] text-[rgb(var(--text-main))] antialiased font-['IBM_Plex_Sans',sans-serif]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
