@@ -215,7 +215,7 @@ export const AuditVerificationPage: React.FC = () => {
         </div>
       )}
 
-      {/* STANDARDS & INTEROPERABILITY COMPLIANCE FRAMING (Fix #30) */}
+      {/* STANDARDS & INTEROPERABILITY COMPLIANCE FRAMING */}
       <div className="p-4 rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-950/20 via-slate-900/40 to-indigo-950/20 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0">
@@ -248,7 +248,7 @@ export const AuditVerificationPage: React.FC = () => {
         </div>
       </div>
 
-      {/* INTELLIGENT 3D TOPOLOGY VALIDATION ENGINE (Fix #28) */}
+      {/* INTELLIGENT 3D TOPOLOGY VALIDATION ENGINE */}
       <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-4 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-500/20">
           <div className="flex items-center gap-2.5">

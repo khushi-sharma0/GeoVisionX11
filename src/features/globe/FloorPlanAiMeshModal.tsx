@@ -46,10 +46,10 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
 
   // Area Conservation Logic: Total Floor Area = Units Area + Common/Corridor Area
   const floorGrossArea = floor ? floor.areaSqm : (building.footprintAreaSqm || 650);
-  const commonCirculationArea = Math.round(floorGrossArea * 0.20 * 10) / 10; // 20% dedicated to core, lifts, and corridors
+  const commonCirculationArea = Math.round(floorGrossArea * 0.20 * 10) / 10;
   const netUnitsAreaAvailable = Math.round((floorGrossArea - commonCirculationArea) * 10) / 10;
 
-  // Active units for this floor (fallback to 3 typical units if none provided)
+  // Active units for this floor
   const activeUnitsList = (units && units.length > 0 ? units : [
     {
       unitId: `${floor?.floorId || 'FL01'}-U01`,
@@ -91,7 +91,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
     };
   });
 
-  // Ensure exact conservation sum without floating point epsilon:
   const runningSum = unitsWithNormalizedArea.slice(0, -1).reduce((acc, u) => acc + u.normalizedArea, 0);
   if (unitsWithNormalizedArea.length > 0) {
     unitsWithNormalizedArea[unitsWithNormalizedArea.length - 1].normalizedArea =
@@ -112,7 +111,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
     [72.86845, 19.06540],
   ];
 
-  // Remove duplicate closure vertex if present
   const polyCoords =
     rawCoords.length > 3 &&
     rawCoords[0][0] === rawCoords[rawCoords.length - 1][0] &&
@@ -132,11 +130,9 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
   const cLat = (minLat + maxLat) / 2;
   const cosLat = Math.cos((cLat * Math.PI) / 180);
 
-  // Approximate real physical dimensions in meters
   const widthM = Math.max(10, Math.round((maxLng - minLng) * 111320 * cosLat * 10) / 10);
   const lengthM = Math.max(10, Math.round((maxLat - minLat) * 111320 * 10) / 10);
 
-  // SVG 2D projection setup (viewBox 0 0 700 400)
   const padX = 80;
   const padY = 55;
   const availW = 700 - padX * 2;
@@ -151,14 +147,13 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
 
   const projectSvg2D = (lng: number, lat: number): [number, number] => {
     const x = centerSvgX + (lng - cLng) * cosLat * scale;
-    const y = centerSvgY - (lat - cLat) * scale; // Invert Y for SVG canvas
+    const y = centerSvgY - (lat - cLat) * scale;
     return [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
   };
 
   const svg2dPolyPts = polyCoords.map(([lng, lat]) => projectSvg2D(lng, lat));
   const svg2dPointsStr = svg2dPolyPts.map(([x, y]) => `${x},${y}`).join(' ');
 
-  // Core polygon scaled towards centroid (35%)
   const corePolyCoords = polyCoords.map(([lng, lat]) => [
     cLng + (lng - cLng) * 0.32,
     cLat + (lat - cLat) * 0.32,
@@ -166,17 +161,14 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
   const svgCorePts = corePolyCoords.map(([lng, lat]) => projectSvg2D(lng, lat));
   const svgCorePointsStr = svgCorePts.map(([x, y]) => `${x},${y}`).join(' ');
 
-  // 3D Isometric projection of authentic polygon
   const projectIso3D = (lng: number, lat: number, zElevationRatio: number): [number, number] => {
     const relX = (lng - cLng) * cosLat * scale * 0.75;
     const relY = (lat - cLat) * scale * 0.75;
     const rad = (rotationAngle * Math.PI) / 180;
 
-    // Rotate about Z axis
     const rotX = relX * Math.cos(rad) - relY * Math.sin(rad);
     const rotY = relX * Math.sin(rad) + relY * Math.cos(rad);
 
-    // Isometric projection with height extrusion
     const isoX = 300 + (rotX - rotY) * 0.866;
     const isoY = 270 + (rotX + rotY) * 0.45 - zElevationRatio * 170;
     return [Math.round(isoX * 10) / 10, Math.round(isoY * 10) / 10];
@@ -190,8 +182,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
   const handleExportDxf = () => {
     let dxf = `0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n`;
     dxf += `0\nPOLYLINE\n8\nBUILDING_BOUNDARY\n66\n1\n70\n1\n`;
-    
-    // Real building footprint in local metric coordinates
     polyCoords.forEach(([lng, lat]) => {
       const xM = ((lng - cLng) * 111320 * cosLat).toFixed(3);
       const yM = ((lat - cLat) * 111320).toFixed(3);
@@ -228,7 +218,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
     const numPts = polyCoords.length;
     const floorH = building.heightM / Math.max(1, building.floorsAbove);
 
-    // Convert footprint points to local meter coordinates
     const localPts = polyCoords.map(([lng, lat]) => [
       +((lng - cLng) * 111320 * cosLat).toFixed(3),
       +((lat - cLat) * 111320).toFixed(3),
@@ -240,16 +229,13 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
       const z1 = ((f + 1) * floorH).toFixed(3);
       obj += `g Floor_${f + 1}\n`;
 
-      // Bottom loop of vertices for this floor
       localPts.forEach(([x, y]) => {
         obj += `v ${x} ${y} ${z0}\n`;
       });
-      // Top loop of vertices for this floor
       localPts.forEach(([x, y]) => {
         obj += `v ${x} ${y} ${z1}\n`;
       });
 
-      // Wall quad faces between vertex i and i+1
       for (let i = 0; i < numPts; i++) {
         const nextI = (i + 1) % numPts;
         const b1 = vertexOffset + i;
@@ -299,7 +285,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
             </div>
           </div>
 
-          {/* Mode Switcher Tabs + Close */}
           <div className="flex items-center gap-3">
             <div className="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-xs">
               <button
@@ -338,11 +323,7 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {activeMode === 'floorPlan' ? (
-            /* ===================================================
-               2D ARCHITECTURAL FLOOR PLAN VIEW
-               =================================================== */
             <div className="space-y-4">
-              {/* Toolbar Controls */}
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-3">
                   <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 select-none">
@@ -374,9 +355,7 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                 </div>
               </div>
 
-              {/* Interactive SVG Cadastral Floor Plan Diagram */}
               <div className="relative w-full aspect-[16/9] bg-slate-950 border border-slate-800 rounded-xl overflow-hidden flex items-center justify-center p-4">
-                {/* Blueprint Grid Background */}
                 <div
                   className="absolute inset-0 opacity-15 pointer-events-none"
                   style={{
@@ -386,7 +365,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                   }}
                 />
 
-                {/* SVG Blueprint */}
                 <svg
                   id="cad-floor-plan-svg"
                   viewBox="0 0 700 400"
@@ -414,7 +392,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     </pattern>
                   </defs>
 
-                  {/* Outer Building Boundary - Authentic Cadastral Footprint Polygon */}
                   <polygon
                     points={svg2dPointsStr}
                     fill="#0f172a"
@@ -423,7 +400,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     strokeLinejoin="round"
                   />
 
-                  {/* Structural Columns at Authentic Polygon Corner Vertices */}
                   {svg2dPolyPts.map(([x, y], idx) => (
                     <g key={idx}>
                       <rect
@@ -438,10 +414,8 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     </g>
                   ))}
 
-                  {/* Dimension Lines using Real Physical Dimensions */}
                   {showDimensions && (
                     <g className="text-[10px] font-mono fill-slate-400">
-                      {/* Top width line */}
                       <line
                         x1={centerSvgX - (spanLng * scale) / 2}
                         y1={centerSvgY - (spanLat * scale) / 2 - 20}
@@ -460,7 +434,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                         {widthM} meters (Width)
                       </text>
 
-                      {/* Left height line */}
                       <line
                         x1={centerSvgX - (spanLng * scale) / 2 - 20}
                         y1={centerSvgY - (spanLat * scale) / 2}
@@ -482,7 +455,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     </g>
                   )}
 
-                  {/* Central Core Scaled to Polygon Footprint */}
                   {showCore && (
                     <g>
                       <polygon
@@ -492,7 +464,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                         strokeWidth="2"
                         strokeDasharray="3 2"
                       />
-                      {/* Central Lifts & Shafts */}
                       <rect
                         x={centerSvgX - 32}
                         y={centerSvgY - 22}
@@ -533,7 +504,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                         LIFT 2
                       </text>
 
-                      {/* Fire Staircase */}
                       <rect
                         x={centerSvgX - 45}
                         y={centerSvgY + 12}
@@ -556,7 +526,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     </g>
                   )}
 
-                  {/* Units Strictly Demarcated & Partitioned Inside Footprint Boundary */}
                   <g clipPath="url(#cadFloorBoundaryClip)">
                     {unitsWithNormalizedArea.map((u, i) => {
                       const count = unitsWithNormalizedArea.length;
@@ -566,12 +535,10 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                       const corridorGap = 7;
 
                       if (count === 1) {
-                        // Full floor plate around core
                         sectorPath = `M 0 0 L 700 0 L 700 400 L 0 400 Z`;
                         badgeX = centerSvgX;
                         badgeY = centerSvgY + 75;
                       } else if (count === 2) {
-                        // Left & Right wings separated by central corridor
                         if (i === 0) {
                           sectorPath = `M 0 0 L ${centerSvgX - corridorGap} 0 L ${centerSvgX - corridorGap} 400 L 0 400 Z`;
                           badgeX = centerSvgX - (spanLng * scale * 0.28);
@@ -582,7 +549,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                           badgeY = centerSvgY;
                         }
                       } else if (count === 3) {
-                        // Unit 0 (West wing), Unit 1 (NE wing), Unit 2 (SE wing)
                         if (i === 0) {
                           sectorPath = `M 0 0 L ${centerSvgX - corridorGap} 0 L ${centerSvgX - corridorGap} 400 L 0 400 Z`;
                           badgeX = centerSvgX - (spanLng * scale * 0.28);
@@ -597,7 +563,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                           badgeY = centerSvgY + (spanLat * scale * 0.25);
                         }
                       } else {
-                        // 4 Quadrants (NW, NE, SE, SW)
                         if (i === 0) {
                           sectorPath = `M 0 0 L ${centerSvgX - corridorGap} 0 L ${centerSvgX - corridorGap} ${centerSvgY - corridorGap} L 0 ${centerSvgY - corridorGap} Z`;
                           badgeX = centerSvgX - (spanLng * scale * 0.25);
@@ -623,7 +588,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
 
                       return (
                         <g key={u.unitId || i}>
-                          {/* Unit Demarcated Sector Surface */}
                           <path
                             d={sectorPath}
                             fill={i === 0 ? '#1e3a8a' : i === 1 ? '#064e3b' : i === 2 ? '#581c87' : '#78350f'}
@@ -633,7 +597,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                             strokeDasharray="4 2"
                           />
 
-                          {/* Demarcation Card Badge (Centered inside Unit Partition) */}
                           <g transform={`translate(${badgeX}, ${badgeY})`}>
                             <rect
                               x={-56}
@@ -683,7 +646,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     })}
                   </g>
 
-                  {/* North Indicator */}
                   <g transform="translate(640, 60)">
                     <circle cx="0" cy="0" r="16" fill="#1e293b" stroke="#64748b" />
                     <polygon points="0,-12 5,4 0,0 -5,4" fill="#ef4444" />
@@ -702,7 +664,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                 </svg>
               </div>
 
-              {/* Cadastral Area Conservation & Volume Reconciliation Panel */}
               <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-750 text-xs space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-slate-800">
                   <div className="flex items-center gap-2">
@@ -742,7 +703,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                 </div>
               </div>
 
-              {/* Metadata strip */}
               <div className="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/80 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2">
                   <ShieldCheck size={16} className="text-emerald-400" />
@@ -769,11 +729,7 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
               </div>
             </div>
           ) : (
-            /* ===================================================
-               3D SYNTHETIC AI MESH PREVIEW
-               =================================================== */
             <div className="space-y-4">
-              {/* Controls */}
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-3">
                   <button
@@ -821,9 +777,7 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                 </div>
               </div>
 
-              {/* 3D Isometric Synthetic Mesh Canvas Representation */}
               <div className="relative w-full aspect-[16/9] bg-slate-950 border border-slate-800 rounded-xl overflow-hidden flex items-center justify-center p-6">
-                {/* AI Grid background */}
                 <div
                   className="absolute inset-0 opacity-20 pointer-events-none"
                   style={{
@@ -833,7 +787,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                   }}
                 />
 
-                {/* Isometric SVG 3D Extrusion Mesh - Computed from Authentic Building Footprint Polygon */}
                 <svg
                   viewBox="0 0 600 360"
                   className="w-full h-full max-h-[340px] select-none"
@@ -849,7 +802,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     </linearGradient>
                   </defs>
 
-                  {/* Ground footprint projection */}
                   <polygon
                     points={groundIsoStr}
                     fill="none"
@@ -858,7 +810,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     strokeDasharray="4 4"
                   />
 
-                  {/* Wall Facets connecting each vertex from Ground to Roof */}
                   {polyCoords.map((_, i) => {
                     const nextI = (i + 1) % polyCoords.length;
                     const facetPts = [
@@ -882,7 +833,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     );
                   })}
 
-                  {/* Horizontal Floor Slabs Wireframe Contour Rings */}
                   {Array.from({ length: Math.min(8, building.floorsAbove) }).map((_, fIdx) => {
                     const ratio = (fIdx + 1) / (Math.min(8, building.floorsAbove) + 1);
                     const ringPts = polyCoords.map(([lng, lat]) => projectIso3D(lng, lat, ratio));
@@ -901,7 +851,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     );
                   })}
 
-                  {/* Roof Polygon Cap */}
                   <polygon
                     points={roofIsoStr}
                     fill={wireframeOnly ? 'none' : 'url(#roofGrad)'}
@@ -910,7 +859,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                     strokeLinejoin="round"
                   />
 
-                  {/* Vertex Points on Roof and Ground */}
                   {roofIsoPts.concat(groundIsoPts).map(([x, y], idx) => (
                     <circle
                       key={idx}
@@ -924,7 +872,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                   ))}
                 </svg>
 
-                {/* Overlay Badge */}
                 <div className="absolute top-4 left-4 bg-slate-900/90 border border-slate-700/80 rounded-lg p-2.5 backdrop-blur-md text-xs space-y-1">
                   <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-[11px]">
                     <Sparkles size={13} />
@@ -939,7 +886,6 @@ export const FloorPlanAiMeshModal: React.FC<FloorPlanAiMeshModalProps> = ({
                 </div>
               </div>
 
-              {/* AI Pipeline Info Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60">
                   <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
