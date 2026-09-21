@@ -26,10 +26,12 @@ export const GovHeader: React.FC<GovHeaderProps> = () => {
       {/* Left: Brand lockup */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2.5">
-          {/* National Gov Icon */}
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-            <span className="tracking-tighter">GOI</span>
-          </div>
+          {/* Logo Image */}
+<img
+  src="/logo.png"
+  alt="VisionX11 Logo"
+  className="w-8 h-8 object-contain rounded bg-white/5"
+/>
           <div className="leading-tight">
             <div className="flex items-center gap-2">
               <span className="font-bold tracking-tight text-sm text-theme-main">GeoVision</span>

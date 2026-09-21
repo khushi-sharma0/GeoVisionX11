@@ -101,9 +101,11 @@ export const AuthLayout: React.FC = () => {
         
         {/* Emblem & Portal Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-cyan-500 text-white font-black text-base shadow-lg mb-1">
-            3D
-          </div>
+          <img
+            src="/logo.png"
+            alt="VisionX11 Logo"
+            className="w-16 h-16 object-contain rounded-2xl shadow-lg border border-theme bg-white/5 p-1 mb-1 mx-auto"
+          />
           <h1 className="text-2xl font-bold tracking-tight text-theme-main">
             GeoVision 3D Cadastre
           </h1>
